@@ -1,17 +1,52 @@
-import React, { FormEvent } from "react";
+import React, { FormEvent, useState } from "react";
 import AccountForm from "./AccountForm";
 import AddressForm from "./AddressForm";
 import "./App.css";
 import useMultistepForm from "./hooks/useMultistepForm";
 import UserForm from "./UserForm";
 
-const App = () => {
-  const { steps, currentStep, step, back, next, isFirst, isLast } =
-    useMultistepForm([<UserForm />, <AddressForm />, <AccountForm />]);
+type FormData = {
+  firstName: string;
+  lastName: string;
+  age: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string;
+  password: string;
+};
 
-  function Submit(e: FormEvent) {
+const INITIAL_DATA: FormData = {
+  firstName: "",
+  lastName: "",
+  age: "",
+  street: "",
+  city: "",
+  state: "",
+  zip: "",
+  email: "",
+  password: "",
+};
+
+function App() {
+  const [data, setData] = useState(INITIAL_DATA);
+  function updateFields(fields: Partial<FormData>) {
+    setData((prev) => {
+      return { ...prev, ...fields };
+    });
+  }
+  const { steps, currentStep, step, isFirst, isLast, back, next } =
+    useMultistepForm([
+      <UserForm {...data} updateFields={updateFields} />,
+      <AddressForm {...data} updateFields={updateFields} />,
+      <AccountForm {...data} updateFields={updateFields} />,
+    ]);
+
+  function onSubmit(e: FormEvent) {
     e.preventDefault();
-    next();
+    if (!isLast) return next();
+    alert("Successful Account Creation");
   }
 
   return (
@@ -19,36 +54,37 @@ const App = () => {
       style={{
         position: "relative",
         background: "white",
-        border: "3px solid black",
+        border: "1px solid black",
         padding: "2rem",
-        margin: "1rem",
+        margin: "1rem auto",
         borderRadius: ".5rem",
         fontFamily: "Arial",
+        maxWidth: "max-content",
       }}
     >
-      <form onSubmit={Submit}>
+      <form onSubmit={onSubmit}>
         <div style={{ position: "absolute", top: ".5rem", right: ".5rem" }}>
-          {currentStep + 1}/{steps.length}
+          {currentStep + 1} / {steps.length}
         </div>
         {step}
         <div
           style={{
+            marginTop: "1rem",
             display: "flex",
-            marginTop: "2rem",
             gap: ".5rem",
             justifyContent: "flex-end",
           }}
         >
           {!isFirst && (
             <button type="button" onClick={back}>
-              back
+              Back
             </button>
           )}
-          <button>{isLast ? "Finish" : "next"}</button>
+          <button type="submit">{isLast ? "Finish" : "Next"}</button>
         </div>
       </form>
     </div>
   );
-};
+}
 
 export default App;
